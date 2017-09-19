@@ -1,3 +1,4 @@
+
 //*/
 const noop = ()=>{};
 const fs = require('fs');
@@ -29,32 +30,35 @@ import DetectAjax from 'koa-isajax';
 
 import * as config from './config';
 //*/
+
+function LOG(level,err){console.log(`[${level.toUpperCase()}]`,err.message||err)}
+
 (async _=>{
 
 const DEV = process.env.NODE_ENV == 'development' || false;
 
-const pug = new Pug({
-    viewPath: './views',
-    debug: DEV,
-    noCache: DEV,
-    compileDebug: DEV,
-    pretty: false,
-    locals:{},
-    helperPath:[]
-});
-
 const app = new Koa();
 app.proxy = true;
 app.env = process.env.NODE_ENV;
-app.keys = ['reeeee normies get out of my code',Config.secret]
-pug.use(app);
+app.keys = ['reeeee normies get out of my code',Config.secret];
 
-function LOG(level,err){console.log(`[${level.toUpperCase()}]`,err.message||err)}
 app.on('error',LOG.bind(null,'error'));
 app.on('warn',LOG.bind(null,'warning'));
 app.on('notice',LOG.bind(null,'notice'));
 app.on('info',LOG.bind(null,'info'));
 
+LOG('up','Starting server...');
+
+const pug = new Pug({
+    app,
+    viewPath: './views',
+    debug: DEV,
+    noCache: DEV,
+    compileDebug: DEV,
+    pretty: DEV,
+    locals:{},
+    helperPath:[]
+});
 
 app.use(BodyParser());
 app.use(UserAgent);
@@ -85,8 +89,33 @@ root.get('/files/:file.:ext',(ctx,next)=>{
     return FileSend(ctx, f, options);
 });
 
-let apps = glob.sync('apps/**/index.js');
+app.emit('info','Synchronizing view folders...');
+
+let apps = glob.sync('apps/*/index.js');
+let sym = glob.sync('views/**/',{symlinks:true});
+
+sym.shift(); // ignore ref to containing folder
+sym.forEach(i=>{ // remove any broken view symlinks
+    let uri = i.slice(i.indexOf('/'),i.lastIndexOf('/'));
+    if (fs.existsSync('views'+uri) && !fs.existsSync('apps'+uri+'/views'))
+        fs.unlinkSync(i);
+});
+apps.forEach(i=>{ // create view symlinks that should be present but aren't.
+    let uri = i.slice(i.indexOf('/'),i.lastIndexOf('/'));
+    if (!fs.existsSync('views'+uri))
+        if (fs.existsSync('apps'+uri+'/views'))
+            fs.symlinkSync(process.cwd()+`/${dir}/views`,'views'+uri, 'junction');
+        else app.emit('info',`Views directory does not exist for ${uri}. Skipping.`);
+});
+app.emit('info','Views have been synchronized.')
+
+
 const appcache = {};
+
+let thrown = 0;
+let stacks = 0;
+let errorToThrow = null;
+Error.stackTraceLimit = 5;
 
 function requires(caller){
     let failure = `App ${caller} failed waiting for -> `;
@@ -115,24 +144,15 @@ function requires(caller){
     });
 };
 
-let thrown = 0;
-let stacks = 0;
-let errorToThrow = null;
-Error.stackTraceLimit = 5;
-
 await Promise.all(apps.map(async i=>{
     let route = new Router();
     let dir = i.slice(0,i.lastIndexOf('/'));
     let uri = dir.slice(dir.indexOf('/'));
-    try {
-        if (fs.statSync(dir+'/views').isDirectory() && !fs.statSync('views'+uri).isDirectory())
-            fs.symlinkSync(process.cwd()+'/'+dir+'/views','views'+uri, 'junction');
-    } catch(e){}
     // route.use(async (ctx,next)=>{ // placeholder
     //     await next();
     // });
     let success = _=>{
-        route.prefix(uri);
+        route.prefix(uri+(route.opts.prefix||''));
         root.use(route.routes(),route.allowedMethods());
         app.emit('require'+uri,_);
     };
@@ -148,7 +168,7 @@ await Promise.all(apps.map(async i=>{
         thrown++;
     };
     try {
-        route.requires = requires(uri);
+        route.require = requires(uri);
         let res = require('./'+dir);
         while(1){
             if (typeof res == 'function') res = res(app, route);
@@ -168,6 +188,6 @@ if (errorToThrow) {
 
 app.use(root.routes(),root.allowedMethods());
 
-app.listen(8086,_=>console.log('Running on port 8086.'));
+app.listen(8086,_=>LOG('up','Running on port 8086.'));
 
-})().catch(e=>console.log(e));
+})().catch(e=>LOG('down',e));
