@@ -1,0 +1,22 @@
+doctype html
+
+html(lang="en")
+    head
+        title Luna Radio - #{page}
+        meta(name="description", content="Luna Radio Website")
+        meta(name="keywords", content="music,radio,internet,pony,chill,classical,orchestral,relaxing")
+        meta(name="robots", content="index,follow,noarchive,nocache,noimageindex")
+        link(rel="stylesheet", charset="utf-8", type="text/css", href="/files/main.css")
+        script(type="application/javascript", charset="utf-8", src="/files/main.js")
+        block head
+    body
+        header
+            block header
+        nav
+            block nav
+        main#top
+            block main
+        
+        footer#bottom
+            block footer
+            p.legal

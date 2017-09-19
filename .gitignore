@@ -1,0 +1,8 @@
+conf
+node_modules
+.**
+!.gitignore
+package-lock.json
+apps/**
+views/**
+!views/*.pug

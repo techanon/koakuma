@@ -1,0 +1,24 @@
+{
+  "name": "lunaradio",
+  "version": "0.1.0",
+  "description": "Luna Radio website",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Techborn",
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^7.1.2",
+    "koa": "^2.3.0",
+    "koa-bodyparser": "^4.2.0",
+    "koa-csrf": "^3.0.6",
+    "koa-isajax": "^1.0.5",
+    "koa-pug": "^3.0.0-2",
+    "koa-router": "^7.2.1",
+    "koa-send": "^4.1.0",
+    "koa-session2": "^2.2.4",
+    "koa-useragent": "^1.0.0",
+    "mime": "^2.0.2"
+  }
+}
