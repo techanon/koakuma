@@ -148,11 +148,7 @@ await Promise.all(apps.map(async i=>{
     let route = new Router();
     let dir = i.slice(0,i.lastIndexOf('/'));
     let uri = dir.slice(dir.indexOf('/'));
-    // route.use(async (ctx,next)=>{ // placeholder
-    //     await next();
-    // });
     let success = _=>{
-        route.prefix(uri+(route.opts.prefix||''));
         root.use(route.routes(),route.allowedMethods());
         app.emit('require'+uri,_);
     };
@@ -169,13 +165,10 @@ await Promise.all(apps.map(async i=>{
     };
     try {
         route.require = requires(uri);
+        route.prefix(uri);
         let res = require('./'+dir);
-        while(1){
-            if (typeof res == 'function') res = res(app, route);
-            else if (res instanceof Promise) 
-                res = await res;
-            else break;
-        }
+        if (typeof res == 'function') res = res(app, route);
+        if (res instanceof Promise) res = await res;
         success(res);
     } catch(e){err(e);}
 }));
