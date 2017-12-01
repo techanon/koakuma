@@ -1,0 +1,4 @@
+apps/**
+views/**
+!views/*.pug
+.**

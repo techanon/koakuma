@@ -2,7 +2,8 @@ conf
 node_modules
 .**
 !.gitignore
-package-lock.json
+!.travis.yml
+!.npmignore
 apps/**
 views/**
 !views/*.pug

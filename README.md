@@ -60,7 +60,7 @@ let config = {};
 let cache = {};
 
 config.secret = 'reeeeeeeeeeeee get out of my code';
-config.get = (app){ return cache[uri] || (cache[uri] = yml(`apps/${app}/config.yml`)) };
+config.get = (app) => { return cache[uri] || (cache[uri] = yml(`apps/${app}/config.yml`)) };
 
 module.exports = config;
 ```
